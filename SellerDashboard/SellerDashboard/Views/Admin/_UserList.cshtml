@@ -1,0 +1,83 @@
+@model IEnumerable<SellerDashboard.Models.ApplicationUser>
+
+<div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div>
+        <h2 class="text-xl font-bold text-text-main dark:text-white">Quản Lý Người Dùng</h2>
+        <p class="text-sm text-text-muted mt-1">Danh sách tất cả người dùng trong hệ thống.</p>
+    </div>
+</div>
+
+<div class="overflow-hidden rounded-xl border border-[#e7f3ec] dark:border-[#2a4034] bg-surface-light dark:bg-surface-dark shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-[#e7f3ec] dark:border-[#2a4034] bg-background-light/50 dark:bg-background-dark/50">
+                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-text-muted">Email</th>
+                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-text-muted">Trạng thái</th>
+                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-text-muted text-right">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#e7f3ec] dark:divide-[#2a4034]">
+                @foreach (var user in Model)
+                {
+                    <tr class="group hover:bg-background-light/50 dark:hover:bg-background-dark/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="flex size-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                                    @user.Email?[0].ToString().ToUpper()
+                                </div>
+                                <span class="text-sm font-medium text-text-main dark:text-white">@user.Email</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if (user.IsLocked)
+                            {
+                                <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                                    <span class="size-1.5 rounded-full bg-red-600 dark:bg-red-400"></span>
+                                    Đã khóa
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-bold text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                                    <span class="size-1.5 rounded-full bg-green-600 dark:bg-green-400"></span>
+                                    Hoạt động
+                                </span>
+                            }
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <button onclick="toggleUserLock('@user.Id')" class="inline-flex items-center gap-1.5 rounded-lg @(user.IsLocked ? "bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400" : "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400") px-3 py-1.5 text-xs font-bold transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">@(user.IsLocked ? "lock_open" : "lock")</span>
+                                @(user.IsLocked ? "Mở khóa" : "Khóa")
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function toggleUserLock(userId) {
+        if (confirm('Bạn có chắc chắn muốn thay đổi trạng thái khóa của người dùng này?')) {
+            fetch('/Admin/ToggleUserLock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'userId=' + userId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadUserList(); // Refresh the list
+                    showToast(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error toggling user lock:', error));
+        }
+    }
+</script>
